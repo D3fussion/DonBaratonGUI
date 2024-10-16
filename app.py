@@ -10,6 +10,7 @@ windows.configure(bg ="#FFFFFF")
 
 
 
+
 canvas = Canvas(
     windows,
     bg = "#FFFFFF",

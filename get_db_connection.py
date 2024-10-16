@@ -1,7 +1,6 @@
 import psycopg2
 
-SQL = os.getenv("MY_SQL")
 
 def get_db_connection():
-    conn = psycopg2.connect(SQL)
+    conn = psycopg2.connect("postgresql://DonBaraton_owner:FzYT6uwqL8ek@ep-wispy-bird-a4q98q3x.us-east-1.aws.neon.tech/DonBaraton?sslmode=require")
     return conn

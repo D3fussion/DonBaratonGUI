@@ -20,7 +20,7 @@ diccionarios_tablas = {"usuarios": "", "ordenes": ""}
 def hacer_tabla(tabla: str, pos: list, svpos: list, shpos: list, window):
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute('SET search_path TO "MercadoOnline";')
+
     cursor.execute(f"SELECT * FROM {tabla}")
     data = cursor.fetchall()
     column_names = [desc[0] for desc in cursor.description]
@@ -83,7 +83,7 @@ def eliminar_comprobar(id: str, tabla: str, window):
 def eliminar(tabla: str, id: int, window):
     connection = get_db_connection()  # Obtener conexión a la base de datos
     cursor = connection.cursor()
-    cursor.execute('SET search_path TO "MercadoOnline";')
+
 
     # Ejecutar la consulta de eliminación
     cursor.execute(f"DELETE FROM {tabla} WHERE id = {id}")

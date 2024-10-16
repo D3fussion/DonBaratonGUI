@@ -62,7 +62,6 @@ def conseguir_datos_internos():
 def conseguir_datos(id: str):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    cursor.execute('SET search_path TO "MercadoOnline";')
     cursor.execute("""
        SELECT * FROM productos WHERE id = %s
     """, (int(id),))
@@ -88,22 +87,7 @@ def buscar_datos(id: str):
         messagebox.showerror("Error", "Product not found")
         return
 
-    entry_1.config(state="normal")
-    entry_2.config(state="normal")
-    entry_2.config(bg="#E9F2FA")
-    entry_3.config(state="normal")
-    entry_3.config(bg="#E9F2FA")
-    entry_4.config(state="normal")
-    entry_4.config(bg="#E9F2FA")
-    entry_5.config(state="normal")
-    entry_6.config(state="normal")
-    entry_7.config(state="normal")
-    entry_8.config(state="normal")
-    entry_9.config(state="normal")
-    entry_10.config(state="normal")
-    entry_11.config(state="normal")
-
-    # {'id': 1, 'nombre': 'Bananas', 'overview': 'Fresh ripe bananas', 'descripcion': 'Yellow bananas, perfect for snacks or smoothies.', 'datos_adicionales': 'Sold in KG', 'categorias': 1, 'link_imagen1': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsnb1otNciSVf-Q-1nvo5Bfw-tXZAxR4rsnA&s', 'link_imagen2': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsnb1otNciSVf-Q-1nvo5Bfw-tXZAxR4rsnA&s', 'link_imagen3': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsnb1otNciSVf-Q-1nvo5Bfw-tXZAxR4rsnA&s', 'precio_antes_descuento': '2.50', 'precio_despues_descuento': '1.99', 'stock_disponible': 100, 'nombre_categoria': 'Fresh Produce'};
+    limpiar(False)
 
     entry_1.insert(0, product["nombre"])
     entry_2.insert("1.0", product["overview"])
@@ -126,7 +110,6 @@ def see_page():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SET search_path TO "MercadoOnline";')
     cursor.execute("SELECT nombre_categoria FROM categorias WHERE id = %s", (datos["categorias"],))
     categoria = cursor.fetchone()[0]
     conn.close()
@@ -153,7 +136,6 @@ def actualizar_datos():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SET search_path TO "MercadoOnline";')
     cursor.execute("""
         UPDATE productos 
         SET nombre = %s, overview = %s, descripcion = %s, datos_adicionales = %s, categorias = %s, precio_antes_descuento = %s, precio_despues_descuento = %s, stock_disponible = %s, link_imagen1 = %s, link_imagen2 = %s, link_imagen3 = %s
@@ -162,9 +144,9 @@ def actualizar_datos():
     conn.commit()
     conn.close()
     messagebox.showinfo("Success", "Product updated successfully")
-    limpiar()
+    limpiar(True)
 
-def limpiar():
+def limpiar(desabilitar: bool):
     entry_12.delete(0, END)
     entry_1.delete(0, END)
     entry_2.delete("1.0", END)
@@ -178,20 +160,36 @@ def limpiar():
     entry_10.delete(0, END)
     entry_11.delete(0, END)
 
-    entry_1.config(state="disabled")
-    entry_2.config(state="disabled")
-    entry_2.config(bg="#F0F0F0")
-    entry_3.config(state="disabled")
-    entry_3.config(bg="#F0F0F0")
-    entry_4.config(state="disabled")
-    entry_4.config(bg="#F0F0F0")
-    entry_5.config(state="disabled")
-    entry_6.config(state="disabled")
-    entry_7.config(state="disabled")
-    entry_8.config(state="disabled")
-    entry_9.config(state="disabled")
-    entry_10.config(state="disabled")
-    entry_11.config(state="disabled")
+    if desabilitar:
+        entry_1.config(state="disabled")
+        entry_2.config(state="disabled")
+        entry_2.config(bg="#F0F0F0")
+        entry_3.config(state="disabled")
+        entry_3.config(bg="#F0F0F0")
+        entry_4.config(state="disabled")
+        entry_4.config(bg="#F0F0F0")
+        entry_5.config(state="disabled")
+        entry_6.config(state="disabled")
+        entry_7.config(state="disabled")
+        entry_8.config(state="disabled")
+        entry_9.config(state="disabled")
+        entry_10.config(state="disabled")
+        entry_11.config(state="disabled")
+    else:
+        entry_1.config(state="normal")
+        entry_2.config(state="normal")
+        entry_2.config(bg="#E9F2FA")
+        entry_3.config(state="normal")
+        entry_3.config(bg="#E9F2FA")
+        entry_4.config(state="normal")
+        entry_4.config(bg="#E9F2FA")
+        entry_5.config(state="normal")
+        entry_6.config(state="normal")
+        entry_7.config(state="normal")
+        entry_8.config(state="normal")
+        entry_9.config(state="normal")
+        entry_10.config(state="normal")
+        entry_11.config(state="normal")
 
 def crear_gui(canvas, window):
     global button_image_1, button_image_2, button_image_3, button_image_4, button_image_5

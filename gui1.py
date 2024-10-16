@@ -21,7 +21,6 @@ def hacer_tabla(tabla: str, windows):
     global table
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute('SET search_path TO "MercadoOnline";')
     cursor.execute(f"SELECT * FROM {tabla}")
     data = cursor.fetchall()
     column_names = [desc[0] for desc in cursor.description]
@@ -67,7 +66,6 @@ def actualizar_tabla(tabla: str, windows):
 def conseguir_datos(id: str):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    cursor.execute('SET search_path TO "MercadoOnline";')
     cursor.execute("""
        SELECT p.*, c.nombre_categoria 
        FROM productos p 

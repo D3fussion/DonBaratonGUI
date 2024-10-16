@@ -1,6 +1,6 @@
 from pathlib import Path
 from tkinter import Button, PhotoImage
-
+from datetime import datetime, date
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -15,6 +15,7 @@ from get_db_connection import get_db_connection
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"assets\frame4")
 
+
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
@@ -23,7 +24,6 @@ def obtener_datos(dato: int):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute('SET search_path TO "MercadoOnline";')
     if dato == 1:
         sql = """
             SELECT c.nombre_categoria, COUNT(o.id) AS productos_vendidos
@@ -66,10 +66,12 @@ def obtener_datos(dato: int):
 
     return resultados
 
+
 def generar_fechas_con_rango(fecha_inicio, fecha_fin):
     # Genera una lista de fechas entre fecha_inicio y fecha_fin
     rango_fechas = pd.date_range(start=fecha_inicio, end=fecha_fin).to_pydatetime().tolist()
     return rango_fechas
+
 
 def mostrar_grafico_pastel(canvas_tk, option: bool):
     global chart
@@ -95,30 +97,46 @@ def mostrar_grafico_pastel(canvas_tk, option: bool):
     chart = FigureCanvasTkAgg(fig, canvas_tk)
     chart.get_tk_widget().place(x=20, y=160, width=559, height=430)
 
+
 # Los mensajes deben ser en ingles
 
 def mostrar_grafico_barras(canvas_tk):
     global chart
-    chart.get_tk_widget().destroy()
-    matplotlib.pyplot.close()
+    # Si existe una gráfica previa, destruirla
+    if 'chart' in globals():
+        chart.get_tk_widget().destroy()
+        plt.close()
+
     # Obtener los datos
     resultados = obtener_datos(2)
+    data = pd.DataFrame(resultados, columns=['Product', 'Total Sold'])
 
-    # Separar los datos
-    productos = [fila[0] for fila in resultados]
-    total_vendido = [fila[1] for fila in resultados]
+    # Ajustar el tamaño de la figura según la cantidad de productos
+    num_productos = len(data['Product'])
+    ancho_figura = max(7, num_productos * 0.6)  # Ajustar el ancho dinámicamente
 
-    # Crear la figura de Matplotlib
-    fig, ax = plt.subplots()
+    # Crear la figura y el subplot
+    fig, ax = plt.subplots(figsize=(ancho_figura, 5))
 
     # Crear la gráfica de barras
-    ax.barh(productos, total_vendido, color='#47A6FF')
-    ax.set_xlabel('Total Sold')
+    ax.bar(data['Product'], data['Total Sold'], color='#47A6FF')
+
+    # Ajustar los ticks en el eje X antes de establecer las etiquetas con un tamaño de fuente menor
+    ax.set_xticks(range(num_productos))
+    ax.set_xticklabels(data['Product'], rotation=45, ha='right', fontsize=8)  # Cambiar el tamaño de la letra aquí
+
+    # Ajustar márgenes para que las etiquetas no se recorten
+    plt.subplots_adjust(bottom=0.3)
+
+    # Ajustes adicionales de la gráfica
+    ax.set_ylabel('Total Sold')
     ax.set_title('Best-Selling Products')
 
-    # Incrustar la gráfica en el canvas de Tkinter
-    chart = FigureCanvasTkAgg(fig, canvas_tk)
+    # Incrustar la figura en el canvas de Tkinter
+    chart = FigureCanvasTkAgg(fig, master=canvas_tk)
     chart.get_tk_widget().place(x=20, y=160, width=559, height=430)
+    chart.draw()
+
 
 def mostrar_grafico_lineas(canvas_tk):
     global chart
@@ -129,8 +147,8 @@ def mostrar_grafico_lineas(canvas_tk):
 
     # Separar las fechas y las ventas
     fechas_existentes = [fila[0] for fila in resultados]
+    fechas_existentes = [datetime.combine(d, datetime.min.time()) for d in fechas_existentes]
     ventas_existentes = [fila[1] for fila in resultados]
-
     # Rango de fechas
     fecha_inicio = fechas_existentes[0]
     fecha_fin = fechas_existentes[-1]
@@ -139,11 +157,13 @@ def mostrar_grafico_lineas(canvas_tk):
     todas_las_fechas = generar_fechas_con_rango(fecha_inicio, fecha_fin)
 
     # Crear un diccionario con todas las fechas (rellenadas con 0)
-    ventas_por_dia = {fecha: 0 for fecha in todas_las_fechas}
+    ventas_por_dia = {fecha: 0 for fecha in todas_las_fechas if fecha not in fechas_existentes}
 
     # Rellenar los días en los que hubo ventas
     for fecha, ventas in zip(fechas_existentes, ventas_existentes):
         ventas_por_dia[fecha] = ventas
+
+    ventas_por_dia = dict(sorted(ventas_por_dia.items()))
 
     # Convertir el diccionario a listas para la gráfica
     fechas = list(ventas_por_dia.keys())
@@ -157,11 +177,12 @@ def mostrar_grafico_lineas(canvas_tk):
     ax.set_xlabel('Date')
     ax.set_ylabel('Sales')
     ax.set_title('Evolution Of Daily Sales')
-    ax.tick_params(axis='x', rotation=45)
+    ax.tick_params(axis='x', rotation=45, labelsize=6)
 
     # Incrustar la gráfica en el canvas de Tkinter
     chart = FigureCanvasTkAgg(fig, canvas_tk)
     chart.get_tk_widget().place(x=20, y=160, width=559, height=430)
+
 
 def mostrar_grafico_dispersion(canvas_tk):
     global chart
@@ -177,7 +198,6 @@ def mostrar_grafico_dispersion(canvas_tk):
     # Generar índices para el eje x (solo para diferenciar a los clientes)
     indices_clientes = list(range(len(emails)))
 
-
     fig, ax = plt.subplots()
 
     ax.scatter(indices_clientes, frecuencia_compras, color='#47A6FF', s=100, alpha=0.6)
@@ -188,6 +208,7 @@ def mostrar_grafico_dispersion(canvas_tk):
     # Incrustar la gráfica en el canvas de Tkinter
     chart = FigureCanvasTkAgg(fig, canvas_tk)
     chart.get_tk_widget().place(x=20, y=160, width=559, height=430)
+
 
 def crear_gui(canvas, windows):
     global button_image_1, button_image_2, button_image_3, button_image_4, button_image_5, button_image_6, button_image_7, button_image_8, button_image_9
@@ -316,7 +337,7 @@ def crear_gui(canvas, windows):
 
     button_image_6 = PhotoImage(
         file=relative_to_assets("button_6.png"))
-    button_6 = Button( # Sales by product category
+    button_6 = Button(  # Sales by product category
         image=button_image_6,
         borderwidth=0,
         highlightthickness=0,
@@ -332,7 +353,7 @@ def crear_gui(canvas, windows):
 
     button_image_7 = PhotoImage(
         file=relative_to_assets("button_7.png"))
-    button_7 = Button( # Best-selling products
+    button_7 = Button(  # Best-selling products
         image=button_image_7,
         borderwidth=0,
         highlightthickness=0,
@@ -348,7 +369,7 @@ def crear_gui(canvas, windows):
 
     button_image_8 = PhotoImage(
         file=relative_to_assets("button_8.png"))
-    button_8 = Button( # Purchace frequency by user
+    button_8 = Button(  # Purchace frequency by user
         image=button_image_8,
         borderwidth=0,
         highlightthickness=0,
@@ -364,7 +385,7 @@ def crear_gui(canvas, windows):
 
     button_image_9 = PhotoImage(
         file=relative_to_assets("button_9.png"))
-    button_9 = Button( # Evolution of sales
+    button_9 = Button(  # Evolution of sales
         image=button_image_9,
         borderwidth=0,
         highlightthickness=0,
@@ -388,6 +409,7 @@ def crear_gui(canvas, windows):
     # )
 
     mostrar_grafico_pastel(canvas, False)
+
 
 def eliminar_gui(window, id: str, canvas):
     # Eliminar todos los widgets de la ventana

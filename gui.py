@@ -67,7 +67,6 @@ def see_page():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SET search_path TO "MercadoOnline";')
     cursor.execute("SELECT nombre_categoria FROM categorias WHERE id = %s", (datos["categorias"],))
     categoria = cursor.fetchone()[0]
     conn.close()
@@ -107,7 +106,6 @@ def submit_page():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SET search_path TO "MercadoOnline";')
     cursor.execute("""
         INSERT INTO productos (nombre, overview, descripcion, datos_adicionales, categorias, precio_antes_descuento, precio_despues_descuento, stock_disponible, link_imagen1, link_imagen2, link_imagen3)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
