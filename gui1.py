@@ -1,7 +1,7 @@
 import os
 import webbrowser
 from pathlib import Path
-from tkinter import Entry, Button, PhotoImage, Scrollbar, messagebox, Tk, Canvas
+from tkinter import Entry, Button, PhotoImage, Scrollbar, messagebox, filedialog
 from tkinter.ttk import Treeview
 from psycopg2.extras import RealDictCursor
 from get_db_connection import get_db_connection
@@ -9,6 +9,7 @@ import gui
 import gui2
 import gui3
 import gui4
+import csv
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"assets\frame1")
@@ -17,13 +18,19 @@ ASSETS_PATH = OUTPUT_PATH / Path(r"assets\frame1")
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
-def hacer_tabla(tabla: str, windows):
+
+def hacer_tabla(tabla: str, windows, canvas):
     global table
+    global data_dic
+    data_dic = {}
+
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(f"SELECT * FROM {tabla}")
     data = cursor.fetchall()
+    data_dic["data"] = data
     column_names = [desc[0] for desc in cursor.description]
+    data_dic["columns"] = column_names
 
     # Crear tabla utilizando Treeview
     table = Treeview(windows, columns=column_names, show='headings')
@@ -50,6 +57,8 @@ def hacer_tabla(tabla: str, windows):
     # Posicionar la tabla en la ventana
     table.place(x=39, y=196, width=521, height=235)
 
+    anadir_save(canvas)
+
     # Ajustar tamaño de las columnas automáticamente
     for col in column_names:
         table.column(col, width=100)
@@ -57,10 +66,29 @@ def hacer_tabla(tabla: str, windows):
     connection.close()
 
 
-def actualizar_tabla(tabla: str, windows):
+def anadir_save(canvas):
+    global button_image_11
+    button_image_11 = PhotoImage(
+        file=relative_to_assets("button_11.png"))
+    button_11 = Button(
+        image=button_image_11,
+        borderwidth=0,
+        highlightthickness=0,
+        command=lambda: guardar_excel(),
+        relief="flat"
+    )
+    button_11.place(
+        x=501.0,
+        y=377.0,
+        width=40.0,
+        height=40.0
+    )
+
+
+def actualizar_tabla(tabla: str, windows, canvas):
     for item in table.get_children():
         table.delete(item)
-    hacer_tabla(tabla, windows)
+    hacer_tabla(tabla, windows, canvas)
 
 
 def conseguir_datos(id: str):
@@ -78,6 +106,27 @@ def conseguir_datos(id: str):
         return dict(product)
     else:
         return {"error": "Product not found"}
+
+
+def guardar_excel():
+    global data_dic
+    folder_path = filedialog.askdirectory()
+
+    if not folder_path:
+        messagebox.showinfo("Error", "No directory selected")
+        return
+
+    path = f"{folder_path}/data.csv"
+
+    try:
+        with open(path, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(data_dic["columns"])
+            for row in data_dic["data"]:
+                writer.writerow(row)
+        messagebox.showinfo("Success", "Data saved successfully")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error: {e}")
 
 
 def see_page(id: str):
@@ -108,6 +157,7 @@ def see_page(id: str):
 
     link_completo = os.path.abspath("assets/pagina/artic.html")
     webbrowser.open(link_completo)
+
 
 def crear_gui(canvas, windows):
     global button_image_1, button_image_2, button_image_3, button_image_4, button_image_5
@@ -270,7 +320,7 @@ def crear_gui(canvas, windows):
         image=button_image_6,
         borderwidth=0,
         highlightthickness=0,
-        command=lambda: actualizar_tabla("productos", windows),
+        command=lambda: actualizar_tabla("productos", windows, canvas),
         relief="flat"
     )
     button_6.place(
@@ -286,7 +336,7 @@ def crear_gui(canvas, windows):
         image=button_image_7,
         borderwidth=0,
         highlightthickness=0,
-        command=lambda: actualizar_tabla("usuarios", windows),
+        command=lambda: actualizar_tabla("usuarios", windows, canvas),
         relief="flat"
     )
     button_7.place(
@@ -302,7 +352,7 @@ def crear_gui(canvas, windows):
         image=button_image_8,
         borderwidth=0,
         highlightthickness=0,
-        command=lambda: actualizar_tabla("categorias", windows),
+        command=lambda: actualizar_tabla("categorias", windows, canvas),
         relief="flat"
     )
     button_8.place(
@@ -334,7 +384,7 @@ def crear_gui(canvas, windows):
         image=button_image_10,
         borderwidth=0,
         highlightthickness=0,
-        command=lambda: actualizar_tabla("ordenes", windows),
+        command=lambda: actualizar_tabla("ordenes", windows, canvas),
         relief="flat"
     )
     button_10.place(
@@ -344,7 +394,7 @@ def crear_gui(canvas, windows):
         height=25.0
     )
 
-    hacer_tabla("usuarios", windows)
+    hacer_tabla("usuarios", windows, canvas)
 
     canvas.create_text(
         55.0,
@@ -354,6 +404,7 @@ def crear_gui(canvas, windows):
         fill="#000000",
         font=("Roboto Regular", 12 * -1)
     )
+
 
 def eliminar_gui(window, id: str, canvas):
     # Eliminar todos los widgets de la ventana

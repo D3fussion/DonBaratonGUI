@@ -1,6 +1,4 @@
 import os
-import subprocess
-import sys
 import webbrowser
 from pathlib import Path
 from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, messagebox, END
